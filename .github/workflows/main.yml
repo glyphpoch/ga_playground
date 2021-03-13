@@ -88,7 +88,7 @@ jobs:
 
           if [ -z ${PREVIOUS_TAG} ]
           then
-            NEXT_TAG="v0.0.1"
+            NEXT_TAG="v1.0.0"
           else
             case "${VERSION_TO_INCREMENT}" in
               patch)
@@ -113,13 +113,13 @@ jobs:
 
           echo "::set-output name=value::${NEXT_TAG}"
 
-          #- name: Actually create a release
-          #  id: create_release
-          #  uses: actions/create-release@v1
-          #  env:
-          #    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          #  with:
-          #    tag_name: ${{ steps.next_tag.outputs.value }}
-          #    release_name: Release ${{ steps.next_tag.outputs.value }}
-          #    draft: false
-          #    prerelease: false
+      - name: Actually create a release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.next_tag.outputs.value }}
+          release_name: Release ${{ steps.next_tag.outputs.value }}
+          draft: false
+          prerelease: false
