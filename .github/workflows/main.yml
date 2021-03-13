@@ -106,6 +106,7 @@ jobs:
               *)
                 echo "Bad increment version type received: ${VERSION_TO_INCREMENT}"
                 exit 1
+            esac
           fi
 
           echo "::set-output name=value::${NEXT_TAG}"
