@@ -9,8 +9,8 @@ jobs:
   collect-data:
     runs-on: ubuntu-latest
     outputs:
-      - manual_release: ${{ steps.release_type.outputs.manual }}
-      - version_to_increment: ${{ steps.get_version.outputs.version }}
+      manual_release: ${{ steps.release_type.outputs.manual }}
+      version_to_increment: ${{ steps.get_version.outputs.version }}
     steps:
       - name: Collect all commit messages
         id: collect
