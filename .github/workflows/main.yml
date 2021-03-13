@@ -77,3 +77,46 @@ jobs:
       - name: Create release
         run: echo "release ${{ needs.collect-data.outputs.version_to_increment }}"
 
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Get next tag or 0.0.1 if no tags exist
+        id: next_tag
+        run: |
+          VERSION_TO_INCREMENT=${{ needs.collect-data.outputs.version_to_increment }}
+          PREVIOUS_TAG=$(git tag --sort=-taggerdate | head -n 1 | sed s/^v//g)
+
+          if [ -z ${PREVIOUS_TAG} ]
+          then
+            NEXT_TAG="v0.0.1"
+          else
+            case "${VERSION_TO_INCREMENT}" in
+              patch)
+                NEXT_TAG=$(echo ${PREVIOUS_TAG} | awk -F '.' '{ print "v" $1 "." $2 "." $3+1 }')
+              ;;
+
+              minor)
+                NEXT_TAG=$(echo ${PREVIOUS_TAG} | awk -F '.' '{ print "v" $1 "." $2+1 ".0" }')
+              ;;
+
+              major)
+                NEXT_TAG=$(echo ${PREVIOUS_TAG} | awk -F '.' '{ print "v" $1+1 ".0.0" }')
+              ;;
+
+              *)
+                echo "Bad increment version type received: ${VERSION_TO_INCREMENT}"
+                exit 1
+          fi
+
+          echo "::set-output name=value::${NEXT_TAG}"
+
+          #- name: Actually create a release
+          #  id: create_release
+          #  uses: actions/create-release@v1
+          #  env:
+          #    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          #  with:
+          #    tag_name: ${{ steps.next_tag.outputs.value }}
+          #    release_name: Release ${{ steps.next_tag.outputs.value }}
+          #    draft: false
+          #    prerelease: false
