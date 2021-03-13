@@ -109,6 +109,8 @@ jobs:
             esac
           fi
 
+          echo $NEXT_TAG
+
           echo "::set-output name=value::${NEXT_TAG}"
 
           #- name: Actually create a release
