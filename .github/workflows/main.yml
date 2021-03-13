@@ -30,7 +30,7 @@ jobs:
         run: echo "::set-output name=major::${{ contains(steps.collect.outputs.commit_messages, '[release-major]') }}"
 
       - name: Figure out which version to increment
-        if: ${{ steps.global_data.outputs.manual }}
+        if: ${{ !steps.global_data.outputs.manual }}
         id: get_version
         env:
           CONTEXT: ${{ toJSON(steps) }}
