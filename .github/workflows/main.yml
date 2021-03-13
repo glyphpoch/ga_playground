@@ -84,6 +84,9 @@ jobs:
         id: next_tag
         run: |
           VERSION_TO_INCREMENT=${{ needs.collect-data.outputs.version_to_increment }}
+
+          git tag --sort=-taggerdate | head -n 1 | sed s/^v//g
+
           PREVIOUS_TAG=$(git tag --sort=-taggerdate | head -n 1 | sed s/^v//g)
 
           if [ -z ${PREVIOUS_TAG} ]
