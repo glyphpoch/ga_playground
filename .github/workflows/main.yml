@@ -1,0 +1,39 @@
+name: testing
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  job1:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Collect all commit messages
+        id: collect
+        run: echo "::set-output name=commit_messages::${{ join(github.event.commits.*.message, '\n') }}"
+
+      - name: Don't create a release?
+        id: manual_release
+        run: echo '::set-output name=manual::${{ contains(steps.collect.outputs.commit_messages, "[release-manual]") }}'
+
+      - name: Increment patch version?
+        id: patch_release
+        run: echo '::set-output name=patch::${{ contains(steps.collect.outputs.commit_messages, "[release-patch]") }}'
+
+      - name: Increment minor version?
+        id: minor_release
+        run: echo '::set-output name=minor::${{ contains(steps.collect.outputs.commit_messages, "[release-minor]") }}'
+
+      - name: Increment major version?
+        id: major_release
+        run: echo '::set-output name=major::${{ contains(steps.collect.outputs.commit_messages, "[release-major]") }}'
+
+      - name: Figure out which version to increment
+        if: ${{ steps.global_data.outputs.manual }}
+        id: get_version
+        env:
+          CONTEXT: ${{ toJSON(steps) }}
+        run: |
+          echo "$CONTEXT"
+
