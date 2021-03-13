@@ -9,7 +9,7 @@ jobs:
   collect-data:
     runs-on: ubuntu-latest
     outputs:
-      manual_release: ${{ steps.release_type.outputs.manual }}
+      automatic_release: ${{ steps.release_type.outputs.automatic }}
       version_to_increment: ${{ steps.get_version.outputs.version }}
     steps:
       - name: Collect all commit messages
@@ -18,22 +18,23 @@ jobs:
 
       - name: Don't create a release?
         id: release_type
-        run: echo "::set-output name=manual::${{ contains(steps.collect.outputs.commit_messages, '[release-manual]') }}"
+        # Note that there's a negation in the expression
+        run: echo "::set-output name=automatic::${{ !contains(steps.collect.outputs.commit_messages, '[release-manual]') }}"
 
       - name: Increment patch version?
-        id: version
-        run: echo "::set-output name=patch::${{ contains(steps.collect.outputs.commit_messages, '[release-patch]') }}"
+        id: patch_step
+        run: echo "::set-output name=increment::${{ contains(steps.collect.outputs.commit_messages, '[release-patch]') }}"
 
       - name: Increment minor version?
-        id: version
-        run: echo "::set-output name=minor::${{ contains(steps.collect.outputs.commit_messages, '[release-minor]') }}"
+        id: minor_step
+        run: echo "::set-output name=increment::${{ contains(steps.collect.outputs.commit_messages, '[release-minor]') }}"
 
       - name: Increment major version?
-        id: version
-        run: echo "::set-output name=major::${{ contains(steps.collect.outputs.commit_messages, '[release-major]') }}"
+        id: major_step
+        run: echo "::set-output name=increment::${{ contains(steps.collect.outputs.commit_messages, '[release-major]') }}"
 
       - name: Figure out which version to increment
-        if: ${{ !steps.manual_release.outputs.manual }}
+        if: ${{ steps.release_type.outputs.automatic }}
         id: get_version
         env:
           CONTEXT: toJSON(steps)
@@ -41,19 +42,19 @@ jobs:
           echo "$CONTEXT"
 
           # We check for the patch flag first because all the other higher level flags override it
-          if ${{ steps.version.outputs.patch }}
+          if ${{ steps.patch_step.outputs.increment }}
           then
             VERSION='patch'
           fi
 
           # Overrides patch if set
-          if ${{ steps.version.outputs.minor }}
+          if ${{ steps.minor_step.outputs.increment }}
           then
             VERSION='minor'
           fi
 
           # Overrides patch or minor if set
-          if ${{ steps.version.outputs.major }}
+          if ${{ steps.major_step.outputs.increment }}
           then
             VERSION='major'
           fi
@@ -71,8 +72,8 @@ jobs:
   create-release:
     runs-on: ubuntu-latest
     needs: collect-data
-    if: ${{ !needs.collect-data.outputs.manual }}
+    if: ${{ needs.collect-data.outputs.automatic_release }}
     steps:
       - name: Create release
-        run: echo "release"
+        run: echo "release ${{ needs.collect-data.outputs.version_to_increment }}"
 
