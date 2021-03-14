@@ -87,6 +87,7 @@ jobs:
 
           ls -la
 
+          echo $(git describe --abbrev=0 --tags --always $(git rev-list --tags --max-count=1))
           echo $(git tag --sort=-taggerdate)
 
           PREVIOUS_TAG=$(git tag --sort=-taggerdate | head -n 1 | sed s/^v//g)
