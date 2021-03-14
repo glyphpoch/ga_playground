@@ -85,6 +85,8 @@ jobs:
         run: |
           VERSION_TO_INCREMENT=${{ needs.collect-data.outputs.version_to_increment }}
 
+          ls -la
+
           echo $(git tag --sort=-taggerdate)
 
           PREVIOUS_TAG=$(git tag --sort=-taggerdate | head -n 1 | sed s/^v//g)
