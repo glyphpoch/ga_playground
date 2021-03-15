@@ -93,7 +93,7 @@ jobs:
           echo $(git describe --abbrev=0 --tags --always $(git rev-list --tags --max-count=1))
           echo $(git tag --sort=-taggerdate)
 
-          PREVIOUS_TAG=$(git describe --abbrev=0 --tags --always $(git rev-list --tags --max-count=1))
+          PREVIOUS_TAG=$(git describe --abbrev=0 --tags --always $(git rev-list --tags --max-count=1) | sed s/^v//g)
           echo "prev ${PREVIOUS_TAG}"
           echo "ver ${VERSION_TO_INCREMENT}"
 
