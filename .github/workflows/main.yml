@@ -70,7 +70,7 @@ jobs:
         id: next_tag
         run: |
           VERSION_TO_INCREMENT=${{ steps.get_version.outputs.version }}
-        PREVIOUS_TAG=$(curl -s "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/latest" -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -H "Accept: application/vnd.github.v3+json" | jq -r '.tag_name' | sed s/^v//g)
+          PREVIOUS_TAG=$(curl -s "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/latest" -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -H "Accept: application/vnd.github.v3+json" | jq -r '.tag_name' | sed s/^v//g)
 
           echo "Previous tag: ${PREVIOUS_TAG}"
           if [ -z ${PREVIOUS_TAG} ]
