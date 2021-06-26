@@ -36,9 +36,10 @@ jobs:
     steps:
     - name: Check if variables/secrets are set correctly
       run: |
+        BRANCH_NAME=${GITHUB_REF##*/}
+
         touch "${GITHUB_WORKSPACE}/.env"
-        ID="${{ env.ID }}"
         echo "TEST=\"${{ secrets.APP_NAME }}\"" >> "${GITHUB_WORKSPACE}/.env"
-        echo "ID=\"${!ID}\"" >> "${GITHUB_WORKSPACE}/.env"
+        echo "ID=\"${!BRANCH_NAME}\"" >> "${GITHUB_WORKSPACE}/.env"
         cat "${GITHUB_WORKSPACE}/.env"
 
