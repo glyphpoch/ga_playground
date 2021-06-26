@@ -18,6 +18,12 @@ jobs:
         BRANCH_NAME=${GITHUB_REF##*/}
         echo "${BRANCH_NAME}"
         echo "::set-output name=env_name::${BRANCH_NAME}"
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify output set correctly
+        run: |
+          echo "${{ needs.prep.outputs.env_name }}"
   collect-data:
     runs-on: ubuntu-latest
     env:
