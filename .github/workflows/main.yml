@@ -7,24 +7,30 @@ on:
       - production_test
 
 jobs:
+  prep:
+    runs-on: ubuntu-latest
+    outputs:
+      env_name: ${{ steps.set_env_name.outputs.env_name }}
+    steps:
+    - name: Set env name
+      id: set_env_name
+      run: |
+        BRANCH_NAME="${GITHUB_REF##*/}"
+        echo ::set-output name=env_name::${BRANCH_NAME}"
   collect-data:
     runs-on: ubuntu-latest
-    if: endsWith(github.ref, '/staging') && success()
     env:
-      env_gh: "staging"
-      id: 12345
-    if: endsWith(github.ref, '/production_test') && success()
-    env:
-      env_gh: "production_test"
-      id: 23456
+      staging: 12345
+      production_test: 23456
     environment:
-      name: ${{ env.env_gh }}
+      name: ${{needs.prep.outputs.env_name}}
       url: "https://github.com"
     steps:
     - name: Check if variables/secrets are set correctly
       run: |
         touch "${GITHUB_WORKSPACE}/.env"
+        ID="${{ env.ID }}"
         echo "TEST=\"${{ secrets.APP_NAME }}\"" >> "${GITHUB_WORKSPACE}/.env"
-        echo "ID=\"${{ env.ID }}\"" >> "${GITHUB_WORKSPACE}/.env"
+        echo "ID=\"${!ID}\"" >> "${GITHUB_WORKSPACE}/.env"
         cat "${GITHUB_WORKSPACE}/.env"
 
