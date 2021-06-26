@@ -19,12 +19,14 @@ jobs:
         echo "::set-output name=env_name::${BRANCH_NAME}"
   verify:
     runs-on: ubuntu-latest
+    needs: prep
     steps:
       - name: Verify output set correctly
         run: |
           echo "${{ needs.prep.outputs.env_name }}"
   collect-data:
     runs-on: ubuntu-latest
+    needs: prep
     env:
       staging: 12345
       production_test: 23456
