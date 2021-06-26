@@ -37,5 +37,6 @@ jobs:
 
         touch "${GITHUB_WORKSPACE}/.env"
         echo "TEST=\"${{ secrets[format('{0}_TEST', env.ENVIRONMENT)] }}\"" >> "${GITHUB_WORKSPACE}/.env"
+        echo "ID=\"${{ env.ID }}\"" >> "${GITHUB_WORKSPACE}/.env"
         cat "${GITHUB_WORKSPACE}/.env"
 
