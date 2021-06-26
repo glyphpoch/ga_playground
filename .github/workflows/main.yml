@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - secret_env
+      - whatever
 
 jobs:
   collect-data:
