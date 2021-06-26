@@ -8,11 +8,11 @@ on:
 jobs:
   collect-data:
     runs-on: ubuntu-latest
-    # `secret_name` variable name has to match the branch name.
-    # `prod` variable name matches the lowercased value of the ENVIRONMENT variable in the production "branch" of
-    # the workflow.
-    environment:
+    env:
+      # This variable name has to match the branch name.
       secret_env: 12345
+      # This variable name matches the lowercased value of the ENVIRONMENT variable in the production "branch" of
+      # the workflow.
       prod: 23456
     steps:
     - name: Set env to development
