@@ -3,41 +3,28 @@ name: testing
 on:
   push:
     branches:
-      - secret_env
-      - whatever
+      - staging
+      - production_test
 
 jobs:
   collect-data:
     runs-on: ubuntu-latest
+    if: endsWith(github.ref, '/staging') && success()
     env:
-      # This variable name has to match the branch name.
-      secret_env: 12345
-      # This variable name matches the lowercased value of the ENVIRONMENT variable in the production "branch" of
-      # the workflow.
-      prod: 23456
+      env_gh: "staging"
+      id: 12345
+    if: endsWith(github.ref, '/production_test') && success()
+    env:
+      env_gh: "production_test"
+      id: 23456
+    environment:
+      name: ${{ env.env_gh }}
+      url: "https://github.com"
     steps:
-    - name: Set env to development
-      if: endsWith(github.ref, '/secret_env')
-      run: |
-        BRANCH_NAME=${GITHUB_REF##*/}
-        echo "ID=${!BRANCH_NAME}" >> ${GITHUB_ENV}
-        # We can either hardcode the environment name here or we can reuse the branch name by setting ENVIRONMENT
-        # to the value of BRANCH_NAME. Note that secret names are case sensitive so you might have to uppercase
-        # the value of the variable - ${BRANCH_NAME^^}
-        echo "ENVIRONMENT=DEV" >> ${GITHUB_ENV}
-    - name: Set env to production
-      if: endsWith(github.ref, '/whatever')
-      run: |
-        ENVIRONMENT="prod"
-        echo "ENVIRONMENT=${ENVIRONMENT^^}" >> ${GITHUB_ENV}
-        # ID will be set to 23456 here
-        echo "ID=${!ENVIRONMENT}" >> ${GITHUB_ENV}
     - name: Check if variables/secrets are set correctly
       run: |
-        echo ${{ format('{0}_TEST', env.ENVIRONMENT) }}
-
         touch "${GITHUB_WORKSPACE}/.env"
-        echo "TEST=\"${{ secrets[format('{0}_TEST', env.ENVIRONMENT)] }}\"" >> "${GITHUB_WORKSPACE}/.env"
+        echo "TEST=\"${{ secrets.APP_NAME }}\"" >> "${GITHUB_WORKSPACE}/.env"
         echo "ID=\"${{ env.ID }}\"" >> "${GITHUB_WORKSPACE}/.env"
         cat "${GITHUB_WORKSPACE}/.env"
 
