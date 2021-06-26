@@ -16,6 +16,7 @@ jobs:
       id: set_env_name
       run: |
         BRANCH_NAME=${GITHUB_REF##*/}
+        echo "${BRANCH_NAME}"
         echo "::set-output name=env_name::${BRANCH_NAME}"
   collect-data:
     runs-on: ubuntu-latest
@@ -23,7 +24,7 @@ jobs:
       staging: 12345
       production_test: 23456
     environment:
-      name: ${{needs.prep.outputs.env_name}}
+      name: ${{ needs.prep.outputs.env_name }}
       url: "https://github.com"
     steps:
     - name: Check if variables/secrets are set correctly
