@@ -15,8 +15,8 @@ jobs:
     - name: Set env name
       id: set_env_name
       run: |
-        BRANCH_NAME="${GITHUB_REF##*/}"
-        echo ::set-output name=env_name::${BRANCH_NAME}"
+        BRANCH_NAME=${GITHUB_REF##*/}
+        echo "::set-output name=env_name::${BRANCH_NAME}"
   collect-data:
     runs-on: ubuntu-latest
     env:
