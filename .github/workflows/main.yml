@@ -3,106 +3,39 @@ name: testing
 on:
   push:
     branches:
-      - main
+      - secret_env
 
 jobs:
   collect-data:
     runs-on: ubuntu-latest
-    outputs:
-      automatic_release: ${{ steps.release_type.outputs.automatic }}
-      version_to_increment: ${{ steps.get_version.outputs.version }}
+    environment:
+      # This variable name has to match the branch name.
+      secret_env: 12345
+      # This variable name matches the lowercased value of the ENVIRONMENT variable in the production "branch" of
+      # the workflow.
+      prod: 23456
     steps:
-      - name: Collect all commit messages
-        id: collect
-        run: |
-          COMMIT_MESSAGES="${{ join(github.event.commits.*.message, ',') }}"
-          # Need to strip out new lines
-          COMMIT_MESSAGES="${COMMIT_MESSAGES//'%'/'%25'}"
-          COMMIT_MESSAGES="${COMMIT_MESSAGES//$'\n'/'%0A'}"
-          COMMIT_MESSAGES="${COMMIT_MESSAGES//$'\r'/'%0D'}"
-          echo "::set-output name=commit_messages::${COMMIT_MESSAGES}"
-      - name: Automatically create a release?
-        id: release_type
-        # Note that there's a negation in the expression
-        run: echo "::set-output name=automatic::${{ !contains(steps.collect.outputs.commit_messages, '[release-manual]') }}"
+    - name: Set env to development
+      if: endsWith(github.ref, '/secret_env')
+      run: |
+        BRANCH_NAME=${GITHUB_REF##*/}
+        echo "ID=${!BRANCH_NAME}" >> ${GITHUB_ENV}
+        # We can either hardcode the environment name here or we can reuse the branch name by setting ENVIRONMENT
+        # to the value of BRANCH_NAME. Note that secret names are case sensitive so you might have to uppercase
+        # the value of the variable - ${BRANCH_NAME^^}
+        echo "ENVIRONMENT=DEV" >> ${GITHUB_ENV}
+    - name: Set env to production
+      if: endsWith(github.ref, '/whatever')
+      run: |
+        ENVIRONMENT="prod"
+        echo "ENVIRONMENT=${ENVIRONMENT^^}" >> ${GITHUB_ENV}
+        # ID will be set to 23456 here
+        echo "ID=${!ENVIRONMENT}" >> ${GITHUB_ENV}
+    - name: Check if variables/secrets are set correctly
+      run: |
+        echo ${{ format('{0}_TEST', env.ENVIRONMENT) }}
 
-      - name: Increment patch version?
-        id: patch_step
-        run: echo "::set-output name=increment::${{ contains(steps.collect.outputs.commit_messages, '[release-patch]') }}"
+        touch "${GITHUB_WORKSPACE}/.env"
+        echo "TEST=\"${{ secrets[format('{0}_TEST', env.ENVIRONMENT)] }}\"" >> "${GITHUB_WORKSPACE}/.env"
+        cat "${GITHUB_WORKSPACE}/.env"
 
-      - name: Increment minor version?
-        id: minor_step
-        run: echo "::set-output name=increment::${{ contains(steps.collect.outputs.commit_messages, '[release-minor]') }}"
-
-      - name: Increment major version?
-        id: major_step
-        run: echo "::set-output name=increment::${{ contains(steps.collect.outputs.commit_messages, '[release-major]') }}"
-
-      - name: Figure out which version to increment
-        if: steps.release_type.outputs.automatic == 'true'
-        id: get_version
-        run: |
-          # We check for the patch flag first because all the other higher level flags override it
-          if ${{ steps.patch_step.outputs.increment }}
-          then
-            VERSION='patch'
-          fi
-          # Overrides patch if set
-          if ${{ steps.minor_step.outputs.increment }}
-          then
-            VERSION='minor'
-          fi
-          # Overrides patch or minor if set
-          if ${{ steps.major_step.outputs.increment }}
-          then
-            VERSION='major'
-          fi
-          # If none of the flags were set then assume that we're incrementing patch
-          if [ -z ${VERSION} ]
-          then
-            VERSION='patch'
-          fi
-          echo "Version number to increment: ${VERSION}"
-          echo "::set-output name=version::${VERSION}"
-
-      - name: Get next tag or 0.0.1 if no tags exist
-        if: steps.release_type.outputs.automatic == 'true'
-        id: next_tag
-        run: |
-          VERSION_TO_INCREMENT=${{ steps.get_version.outputs.version }}
-          PREVIOUS_TAG=$(curl -s "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/latest" -H "Accept: application/vnd.github.v3+json" | jq -r '.tag_name' | sed s/^v//g)
-
-          echo "Previous tag: ${PREVIOUS_TAG}"
-          if [ -z ${PREVIOUS_TAG} ]
-          then
-            NEXT_TAG="v0.0.1"
-          else
-            case "${VERSION_TO_INCREMENT}" in
-              patch)
-                NEXT_TAG=$(echo ${PREVIOUS_TAG} | awk -F '.' '{ print "v" $1 "." $2 "." $3+1 }')
-                ;;
-              minor)
-                NEXT_TAG=$(echo ${PREVIOUS_TAG} | awk -F '.' '{ print "v" $1 "." $2+1 ".0" }')
-                ;;
-              major)
-                NEXT_TAG=$(echo ${PREVIOUS_TAG} | awk -F '.' '{ print "v" $1+1 ".0.0" }')
-                ;;
-              *)
-                echo "Bad increment version type received: ${VERSION_TO_INCREMENT}"
-                exit 1
-            esac
-          fi
-          echo "New tag: ${NEXT_TAG}"
-          echo "::set-output name=value::${NEXT_TAG}"
-
-
-      - name: Actually create a release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ steps.next_tag.outputs.value }}
-          release_name: Release ${{ steps.next_tag.outputs.value }}
-          draft: false
-          prerelease: false
