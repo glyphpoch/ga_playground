@@ -12,8 +12,7 @@ jobs:
     outputs:
       env_name: ${{ steps.set_env_name.outputs.env_name }}
     steps:
-    - name: Set env name
-      id: set_env_name
+    - id: set_env_name
       run: |
         BRANCH_NAME=${GITHUB_REF##*/}
         echo "${BRANCH_NAME}"
