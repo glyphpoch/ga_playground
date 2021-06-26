@@ -37,6 +37,8 @@ jobs:
     - name: Check if variables/secrets are set correctly
       run: |
         BRANCH_NAME=${GITHUB_REF##*/}
+        BREAK_THE_RULES="${{ secrets.APP_NAME }}"
+        echo "${BREAK_THE_RULES^^}"
 
         touch "${GITHUB_WORKSPACE}/.env"
         echo "TEST=\"${{ secrets.APP_NAME }}\"" >> "${GITHUB_WORKSPACE}/.env"
