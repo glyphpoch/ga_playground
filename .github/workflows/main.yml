@@ -3,6 +3,7 @@ name: testing
 on:
   issue_comment:
     types: [created]
+  workflow_dispatch
 
 jobs:
   get-comment-content:
